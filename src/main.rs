@@ -8,6 +8,14 @@ use std::{
 
 #[derive(Bpaf)]
 struct Opts {
+    /// The factor by which the chunk size grows
+    #[bpaf(
+        argument("FACTOR"),
+        fallback(1.25),
+        display_fallback,
+        guard(|x| *x >= 1.0, "must be >= 1"),
+    )]
+    backoff: f64,
     /// A file to read data from.  Reads from stdin if not specified
     #[bpaf(positional("PATH"))]
     file: Option<PathBuf>,
@@ -44,7 +52,7 @@ fn main2() -> std::io::Result<()> {
             rdr.consume(target);
             total += target;
             write_char(&mut stdout, &mut hasher)?;
-            chunk = chunk.saturating_add(chunk / 4);
+            chunk = (chunk as f64 * opts.backoff) as usize;
         } else {
             hasher.update(buf);
             let n = buf.len();
