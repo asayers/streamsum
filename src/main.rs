@@ -30,28 +30,39 @@ fn main2() -> std::io::Result<()> {
     };
     let stdout = std::io::stdout();
     let mut stdout = stdout.lock();
-    let mut len = 0;
+    let mut total = 0;
     let mut chunk = 1024;
     loop {
         let target = chunk - hasher.count() as usize;
         let buf = rdr.fill_buf()?;
         if buf.len() == 0 {
             write_char(&mut stdout, &mut hasher)?;
-            writeln!(stdout, " (read {} bytes)", len)?;
+            writeln!(stdout, " (read {} bytes)", fmt_num(total))?;
             return Ok(());
         } else if buf.len() >= target {
             hasher.update(&buf[..target]);
             rdr.consume(target);
-            len += target;
+            total += target;
             write_char(&mut stdout, &mut hasher)?;
             chunk = chunk.saturating_add(chunk / 4);
         } else {
             hasher.update(buf);
             let n = buf.len();
             rdr.consume(n);
-            len += n;
+            total += n;
         }
     }
+}
+
+fn fmt_num(x: usize) -> String {
+    let bytes = x.to_string();
+    let gs = bytes
+        .as_bytes()
+        .rchunks(3)
+        .map(|x| std::str::from_utf8(x).unwrap())
+        .rev();
+    // Iterator::intersperse() is unstable :-(
+    gs.collect::<Vec<&str>>().join("_")
 }
 
 fn write_char(stdout: &mut StdoutLock, hasher: &mut Hasher) -> std::io::Result<()> {
