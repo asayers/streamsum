@@ -1,7 +1,15 @@
 use blake3::Hasher;
-use std::io::{BufRead, StdoutLock, Write};
+use std::io::{BufRead, ErrorKind, StdoutLock, Write};
 
 fn main() -> std::io::Result<()> {
+    match main2() {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == ErrorKind::BrokenPipe => Ok(()),
+        Err(e) => Err(e),
+    }
+}
+
+fn main2() -> std::io::Result<()> {
     let mut hasher = blake3::Hasher::new();
     let stdin = std::io::stdin();
     let mut stdin = stdin.lock();
