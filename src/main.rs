@@ -1,7 +1,7 @@
 use blake3::Hasher;
 use std::io::{BufRead, StdoutLock, Write};
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let mut hasher = blake3::Hasher::new();
     let stdin = std::io::stdin();
     let mut stdin = stdin.lock();
@@ -11,16 +11,16 @@ fn main() {
     let mut chunk = 1024;
     loop {
         let target = chunk - hasher.count() as usize;
-        let buf = stdin.fill_buf().unwrap();
+        let buf = stdin.fill_buf()?;
         if buf.len() == 0 {
-            write_char(&mut stdout, &mut hasher);
-            writeln!(stdout, " (read {} bytes)", len).unwrap();
-            return;
+            write_char(&mut stdout, &mut hasher)?;
+            writeln!(stdout, " (read {} bytes)", len)?;
+            return Ok(());
         } else if buf.len() >= target {
             hasher.update(&buf[..target]);
             stdin.consume(target);
             len += target;
-            write_char(&mut stdout, &mut hasher);
+            write_char(&mut stdout, &mut hasher)?;
             chunk = chunk.saturating_add(chunk / 4);
         } else {
             hasher.update(buf);
@@ -31,12 +31,13 @@ fn main() {
     }
 }
 
-fn write_char(stdout: &mut StdoutLock, hasher: &mut Hasher) {
+fn write_char(stdout: &mut StdoutLock, hasher: &mut Hasher) -> std::io::Result<()> {
     let hash = hasher.finalize();
     hasher.reset();
     let table = b"0123456789abcdef";
     let b = hash.as_bytes()[0];
     let c = table[(b >> 4) as usize];
-    stdout.write_all(&[c]).unwrap();
-    stdout.flush().unwrap();
+    stdout.write_all(&[c])?;
+    stdout.flush()?;
+    Ok(())
 }
