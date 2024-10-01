@@ -10,3 +10,4 @@ repository = "https://github.com/asayers/streamsum"
 
 [dependencies]
 blake3 = "1.5.4"
+bpaf = { version = "0.9.14", features = ["derive"] }
