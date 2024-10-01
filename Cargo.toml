@@ -2,6 +2,11 @@
 name = "streamsum"
 version = "0.1.0"
 edition = "2021"
+description = "Incrementally checksum stdin"
+authors = ["Alex Sayers <alex@asayers.com>"]
+license = "Unlicense"
+readme = "README.md"
+repository = "https://github.com/asayers/streamsum"
 
 [dependencies]
 blake3 = "1.5.4"
